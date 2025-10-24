@@ -32,6 +32,18 @@ mkdir -p data
 mkdir -p figures
 
 
+# Paper figures mode: generate all publication figures in one go
+if [ "${1-}" = "--paperfigs" ]; then
+  echo "[INFO] Generating full HerbMind publication figure suite..."
+  mkdir -p figures
+  python HerbMindFiguresMatched.py --output-dir figures || {
+    echo "[ERROR] Failed to run HerbMindFiguresMatched.py."
+    exit 1
+  }
+  echo "[OK] Paper figures saved under ./figures/."
+  exit 0
+fi
+
 # Pro mode: publication-quality figures (600 dpi)
 if [ "${1-}" = "--pro" ]; then
   echo "[INFO] Pro mode: generating publication-quality figures..."
