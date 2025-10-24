@@ -173,30 +173,3 @@ bash run.sh --pro
 Uses `Mypaperfiguretable_Pro.py` (Helvetica/Arial fonts, unified palette).
 
 Reads optional `outputs/metrics.json` for real results; otherwise uses placeholders.
-
-## Stepwise application figures (RecipeMind Fig.7/8 style)
-
-```bash
-bash run.sh --cases
-```
-
-- Generates `figures/fig_caseA_stepwise.png` and `figures/fig_caseB_stepwise.png`.
-- Edit `cases.yaml` to change seed herbs or step count.
-- Uses model scores if `outputs/model_scores.pkl` is available; otherwise falls back to sPMIr computed from `data/*.csv`.
-
-## RecipeMind-style, layout-matched figures
-
-```bash
-bash run.sh --match
-```
-
-Produces the publication-layout counterparts:
-
-- `fig1_overview_matched.png`: split panel (User vs. HerbMind, step capsules)
-- `fig2_spmir_kde_matched.png`: KDE curves with mean markers
-- `fig3_cascaded_arch_matched.png`: cascaded SAB/PMX diagram
-- `fig5_baselines_heat_matched.png` and `fig6_ablation_heat_matched.png`: heat tables with per-cell annotations
-- `fig7_case*_stepwise_matched.png`: dual tables with highlighted seeds and per-step top-3
-- `fig9_case*_attn_matched.png`: triangular attention heatmaps with `?` placeholders for masked cells
-
-Figures are saved under `./figures/`; all scripts respect optional metrics in `outputs/metrics.json` when present.

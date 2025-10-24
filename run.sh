@@ -44,30 +44,6 @@ if [ "${1-}" = "--pro" ]; then
   exit 0
 fi
 
-
-# Stepwise case figures (RecipeMind Fig.7/8 style)
-if [ "${1-}" = "--cases" ]; then
-  echo "[INFO] Generating stepwise case figures (--cases)..."
-  mkdir -p data figures outputs
-  python StepwiseCases.py || {
-    echo "[ERROR] Failed to run StepwiseCases.py. Ensure data/ contains prescriptions."
-    exit 1
-  }
-  exit 0
-fi
-
-
-# Layout-matched RecipeMind figures
-if [ "${1-}" = "--match" ]; then
-  echo "[INFO] Generating layout-matched RecipeMind figures (--match)..."
-  mkdir -p data figures outputs
-  python RecipeMindMatched.py || {
-    echo "[ERROR] Failed to run RecipeMindMatched.py."
-    exit 1
-  }
-  exit 0
-fi
-
 echo "[INFO] Environment ready. Running figure/table generator..."
 python Mypaperfiguretable.py || {
   echo "[ERROR] Failed to run Mypaperfiguretable.py. Check that your CSVs exist under ./data/ and columns include '처방아이디' and '약재한글명'."
