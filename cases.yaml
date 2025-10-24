@@ -1,0 +1,8 @@
+caseA:
+  title_ko: "사례 A: 숙지황·산수유 → 단계적 추천"
+  seeds: ["숙지황", "山茱萸"]
+  steps: 8
+caseB:
+  title_ko: "사례 B: 마황·계지 → 단계적 추천"
+  seeds: ["麻黃", "계지"]
+  steps: 8
