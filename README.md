@@ -163,3 +163,13 @@ Figures are saved under ./figures/:
 - fig5_qualitative_examples.png
 
 If you're on Apple Silicon with Homebrew Python (PEP 668), the script handles a local venv automatically.
+
+## Publication-quality figures (600 dpi)
+
+```bash
+bash run.sh --pro
+```
+
+Uses `Mypaperfiguretable_Pro.py` (Helvetica/Arial fonts, unified palette).
+
+Reads optional `outputs/metrics.json` for real results; otherwise uses placeholders.
