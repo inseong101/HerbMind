@@ -113,3 +113,27 @@ The jupyter notebook **RecipeMind Post Analysis.ipynb** contains the source code
 ```
 
 
+Generating Paper Figures & Console Tables
+
+This repo includes a standalone script to generate HerbMind manuscript figures and print tables.
+
+Run
+
+pip install -r requirements.txt
+python Mypaperfiguretable.py
+
+
+Tables (dataset stats, ablations) are printed to console (no CSV export).
+
+Figures are saved as PNG under figures/:
+
+fig1_model_architecture.png
+
+fig2_spmir_distribution.png
+
+fig3_accuracy_comparison.png
+
+fig4_attention_heatmap.png
+
+fig5_qualitative_examples.png
+
