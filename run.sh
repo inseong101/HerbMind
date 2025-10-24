@@ -31,6 +31,19 @@ pip install -r requirements.txt
 mkdir -p data
 mkdir -p figures
 
+
+# Pro mode: publication-quality figures (600 dpi)
+if [ "${1-}" = "--pro" ]; then
+  echo "[INFO] Pro mode: generating publication-quality figures..."
+  mkdir -p data figures outputs
+  python Mypaperfiguretable_Pro.py || {
+    echo "[ERROR] Failed to run Mypaperfiguretable_Pro.py. Check metrics/data under ./outputs/ and ./data/."
+    exit 1
+  }
+  echo "[OK] Done. Pro figures saved under ./figures/."
+  exit 0
+fi
+
 echo "[INFO] Environment ready. Running figure/table generator..."
 python Mypaperfiguretable.py || {
   echo "[ERROR] Failed to run Mypaperfiguretable.py. Check that your CSVs exist under ./data/ and columns include '처방아이디' and '약재한글명'."
