@@ -1,11 +1,31 @@
-#
+# Python caches
 __pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Data artifacts
 data/ver1/
 data/*.pkl
 data/*.csv
+
+# Notebooks
 .ipynb_checkpoints/
+
+# Model artifacts
 *.pkl
 *.csv
 wandb/
 saved/*/*
 results/*.csv
+
+# Virtual environments
+.venv/
+.env
+venv/
+
+# macOS
+.DS_Store
+
+# Generated figures
+figures/*.png

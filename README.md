@@ -137,3 +137,29 @@ fig4_attention_heatmap.png
 
 fig5_qualitative_examples.png
 
+
+## Quick Start (HerbMind figures & tables)
+
+Put your KIOM CSVs under ./data/
+
+Expected columns (auto-detected): 처방아이디 (prescription id), 약재명 or 약재한글명 (herb name).
+
+Run (one command):
+
+```bash
+bash run.sh
+```
+
+A local virtualenv (.venv) will be created and dependencies installed (compatible with macOS Homebrew Python).
+
+Tables print to console (no CSV export).
+
+Figures are saved under ./figures/:
+
+- fig1_model_architecture.png
+- fig2_spmir_distribution.png
+- fig3_accuracy_comparison.png
+- fig4_attention_heatmap.png
+- fig5_qualitative_examples.png
+
+If you're on Apple Silicon with Homebrew Python (PEP 668), the script handles a local venv automatically.
