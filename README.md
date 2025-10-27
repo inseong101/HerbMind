@@ -30,16 +30,16 @@ conda activate recipemind
 
 ## Training RecipeMind
 
-Run the following code,
+Run the consolidated command line interface:
 ```
-./train_script.sh {your_session_name} {random_seed_integer}
+python recipemind_cli.py train --session_name {your_session_name} --random_seed {random_seed_integer}
 ```
 
 ## Testing RecipeMind in all ingredient set sizes from 2 to 7
 
-Run the following code,
+Run the unified CLI for each downstream subset (2-7):
 ```
-./test_script.sh {your_session_name} {random_seed_integer}
+python recipemind_cli.py test --session_name {your_session_name} --random_seed {random_seed_integer} --downstream_task scoring_subset{N}
 ```
 
 ## Analyzing RecipeMind
@@ -147,10 +147,12 @@ Expected columns (auto-detected): 처방아이디 (prescription id), 약재명 o
 Run (one command):
 
 ```bash
-bash run.sh
+python recipemind_cli.py setup
+python recipemind_cli.py figures --mode default  # use --mode paper or --mode pro for other figure suites
 ```
 
-A local virtualenv (.venv) will be created and dependencies installed (compatible with macOS Homebrew Python).
+A local virtualenv (.venv) will be created and dependencies installed (compatible with macOS Homebrew Python) when running the
+``setup`` sub-command.
 
 Tables print to console (no CSV export).
 
@@ -167,7 +169,7 @@ If you're on Apple Silicon with Homebrew Python (PEP 668), the script handles a 
 ## Publication-quality figures (600 dpi)
 
 ```bash
-bash run.sh --pro
+python recipemind_cli.py figures --mode pro
 ```
 
 Uses `Mypaperfiguretable_Pro.py` (Helvetica/Arial fonts, unified palette).
