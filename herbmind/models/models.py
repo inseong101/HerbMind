@@ -1,35 +1,35 @@
-from recipemind.config import *
+from herbmind.config import *
 import torch
 import torch.nn as nn
 import torch.nn.parallel
 import numpy as np
 import collections
-from recipemind.models.model_utils import *
+from herbmind.models.model_utils import *
 import torch.optim as optim
 from sklearn.metrics import pairwise as pw
 import os.path
 
 torch.set_printoptions(threshold=10_000)
 
-def load_recipe_model(args):
-    if args.model_struct.startswith('recipemind'):
-        return RecipeMind(args)
+def load_prescription_model(args):
+    if args.model_struct.startswith('herbmind'):
+        return HerbMind(args)
     elif args.model_struct.startswith('baseline_kim'):
         args.sab_num_aheads = 4
         args.sab_num_blocks = 1
         args.pma_num_aheads = 2
         args.pma_num_blocks = 1
         args.pma_num_sdvecs = 1
-        args.model_struct   = 'recipemind_isab_pma_cat_' + args.model_struct.split('_')[-1]
-        return RecipeMind(args)
+        args.model_struct   = 'herbmind_isab_pma_cat_' + args.model_struct.split('_')[-1]
+        return HerbMind(args)
     elif args.model_struct.startswith('baseline_li'):
         args.sab_num_aheads = 4
         args.sab_num_blocks = 2
         args.pma_num_aheads = 4
         args.pma_num_blocks = 1
         args.pma_num_sdvecs = 2
-        args.model_struct   = 'recipemind_isab_pma_cat_' + args.model_struct.split('_')[-1]
-        return RecipeMind(args)
+        args.model_struct   = 'herbmind_isab_pma_cat_' + args.model_struct.split('_')[-1]
+        return HerbMind(args)
 
 
     elif args.model_struct == 'kitchenette':
@@ -572,14 +572,25 @@ class Kitchenette(nn.Module):
         return batch
 
 
-class RecipeMind(nn.Module):
+class HerbMind(nn.Module):
     def __init__(self, args=0):
-        super(RecipeMind, self).__init__()
+        super(HerbMind, self).__init__()
         self.ele_encoder     = load_element_encoder(args)
         if 'raw' in args.model_struct: args.hidden_dim = args.lang_dim['J']
         if 'ars' in args.model_struct: args.hidden_dim = args.ars_num_hsets
         self.set_pooling     = load_set_pooling(args)
         self.score_predictor = load_score_predictor(args)
+
+        # Convenience handles so that downstream analysis code can access the
+        # final cross/self-attention blocks without needing to inspect the
+        # encoder/pooling internals.
+        self.sab = getattr(self.ele_encoder, 'sab', None)
+        pmx_blocks = getattr(self.set_pooling, 'pmx', None)
+        if pmx_blocks is None and hasattr(self.set_pooling, 'pool'):
+            # ``PmxPooling`` exposes a single ``pool`` module rather than a
+            # list; normalise to a ModuleList for consistent downstream access.
+            pmx_blocks = nn.ModuleList([self.set_pooling.pool])
+        self.pmx = pmx_blocks
 
     def set_hybrid_coef(self, epsilon):
         self.score_predictor.eps = epsilon
@@ -593,7 +604,10 @@ class RecipeMind(nn.Module):
 
     def make_predictions(self, batch):
         batch = self.score_predictor(batch)
-  
+
+        return batch
+
+    def prep_batch(self, batch):
         return batch
 
     @torch.no_grad()
@@ -611,5 +625,34 @@ class RecipeMind(nn.Module):
     def forward(self, batch):
         batch = self.make_representations(batch)
         batch = self.make_predictions(batch)
-        
-        return batch
+        self._last_batch = batch
+
+        return batch['xS']
+
+    def get_attnmaps(self, batch):
+        self.forward(batch)
+
+        def _extract_attention(module):
+            mab = getattr(module, 'mab', None)
+            if mab is None:
+                return None
+            attn = getattr(mab, 'A', None)
+            if attn is not None:
+                return attn
+            # Fall back to the hooks used when ``model_analysis`` is enabled.
+            attention_obj = getattr(mab, 'attention', None)
+            if attention_obj is not None:
+                maps = getattr(attention_obj, 'attention_maps', None)
+                if maps:
+                    return torch.as_tensor(maps[-1])
+            return None
+
+        pmx_attn = None
+        if self.pmx:
+            pmx_attn = _extract_attention(self.pmx[-1])
+
+        sab_attn = None
+        if self.sab:
+            sab_attn = _extract_attention(self.sab[-1])
+
+        return pmx_attn, sab_attn

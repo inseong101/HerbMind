@@ -1,4 +1,4 @@
-name: recipemind
+name: herbmind
 channels:
   - defaults
 dependencies:
@@ -117,4 +117,4 @@ dependencies:
     - wcwidth==0.2.5
     - webencodings==0.5.1
     - zipp==3.8.0
-prefix: /home/keonwoo/anaconda3/envs/recipemind
+prefix: /home/keonwoo/anaconda3/envs/herbmind

@@ -1,6 +1,6 @@
-from recipemind.config import *
-from recipemind.pipeline.trainer import *
-from recipemind.models import *
+from herbmind.config import *
+from herbmind.pipeline.trainer import *
+from herbmind.models import *
 import wandb
 import torch
 import numpy as np
@@ -57,7 +57,7 @@ class RecipeIdeationPipeline(object):
         import pdb; pdb.set_trace()
 
 
-    def get_ranked_list(self, query_ingredients, query_tags, mc_dropout=False):
+    def get_ranked_list(self, query_herbs, query_tags, mc_dropout=False):
         x = 0
 
 
