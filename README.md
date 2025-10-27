@@ -14,6 +14,33 @@ We propose a computational approach for recipe ideation, a down-stream task that
 
 ![img](./figures/1_model.png)
 
+## Repository layout
+
+```
+recipemind/
+├── __init__.py
+├── cli.py
+├── config.py
+├── data.py
+├── models/
+│   ├── __init__.py
+│   ├── model_utils.py
+│   └── models.py
+└── pipeline/
+    ├── __init__.py
+    ├── pipeline.py
+    └── trainer.py
+legacy/
+├── HerbMindFiguresMatched.py
+├── Mypaperfiguretable.py
+├── Mypaperfiguretable_Pro.py
+├── RecipeMind Post Analysis.ipynb
+├── RecipeMindMatched.py
+└── StepwiseCases.py
+```
+
+Core training and inference code now lives under the `recipemind/` Python package. Historical notebooks and figure-generation scripts remain available under `legacy/`.
+
 ## Prerequisites for running RecipeMind
 
 - Python 3.8.12
@@ -32,19 +59,19 @@ conda activate recipemind
 
 Run the consolidated command line interface:
 ```
-python recipemind_cli.py train --session_name {your_session_name} --random_seed {random_seed_integer}
+python -m recipemind.cli train --session_name {your_session_name} --random_seed {random_seed_integer}
 ```
 
 ## Testing RecipeMind in all ingredient set sizes from 2 to 7
 
 Run the unified CLI for each downstream subset (2-7):
 ```
-python recipemind_cli.py test --session_name {your_session_name} --random_seed {random_seed_integer} --downstream_task scoring_subset{N}
+python -m recipemind.cli test --session_name {your_session_name} --random_seed {random_seed_integer} --downstream_task scoring_subset{N}
 ```
 
 ## Analyzing RecipeMind
 
-The jupyter notebook **RecipeMind Post Analysis.ipynb** contains the source code for deploying the trained RecipeModel model in recipe ideation scenarios starting with any number of ingredients. We provided example cells that output the ideation results and attention heatmaps for interpretation purposes. The example heatmaps are the following,
+The Jupyter notebook **legacy/RecipeMind Post Analysis.ipynb** contains the source code for deploying the trained RecipeModel model in recipe ideation scenarios starting with any number of ingredients. We provided example cells that output the ideation results and attention heatmaps for interpretation purposes. The example heatmaps are the following,
 
 ### Case Study 1: Starting with Carrots and Onions
 
@@ -120,7 +147,7 @@ This repo includes a standalone script to generate HerbMind manuscript figures a
 Run
 
 pip install -r requirements.txt
-python Mypaperfiguretable.py
+python -m recipemind.cli figures --mode default
 
 
 Tables (dataset stats, ablations) are printed to console (no CSV export).
@@ -147,8 +174,8 @@ Expected columns (auto-detected): 처방아이디 (prescription id), 약재명 o
 Run (one command):
 
 ```bash
-python recipemind_cli.py setup
-python recipemind_cli.py figures --mode default  # use --mode paper or --mode pro for other figure suites
+python -m recipemind.cli setup
+python -m recipemind.cli figures --mode default  # use --mode paper or --mode pro for other figure suites
 ```
 
 A local virtualenv (.venv) will be created and dependencies installed (compatible with macOS Homebrew Python) when running the
@@ -169,9 +196,9 @@ If you're on Apple Silicon with Homebrew Python (PEP 668), the script handles a 
 ## Publication-quality figures (600 dpi)
 
 ```bash
-python recipemind_cli.py figures --mode pro
+python -m recipemind.cli figures --mode pro
 ```
 
-Uses `Mypaperfiguretable_Pro.py` (Helvetica/Arial fonts, unified palette).
+Uses `legacy/Mypaperfiguretable_Pro.py` (Helvetica/Arial fonts, unified palette).
 
 Reads optional `outputs/metrics.json` for real results; otherwise uses placeholders.

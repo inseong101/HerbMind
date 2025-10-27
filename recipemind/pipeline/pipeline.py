@@ -1,7 +1,6 @@
-
-from env_config import *
-from trainer import *
-from models import *
+from recipemind.config import *
+from recipemind.pipeline.trainer import *
+from recipemind.models import *
 import wandb
 import torch
 import numpy as np

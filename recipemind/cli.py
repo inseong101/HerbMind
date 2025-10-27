@@ -17,16 +17,19 @@ import sys
 from pathlib import Path
 from typing import Iterable
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+LEGACY_DIR = REPO_ROOT / "legacy"
+
 import numpy as np
 import torch
 import wandb
 import pickle
 import setproctitle
 
-from env_config import *  # noqa: F401,F403 - re-exported constants are required.
-from models import *  # noqa: F401,F403 - used by training/testing logic.
-from pipeline import *  # noqa: F401,F403 - pipelines are reused during testing.
-from trainer import *  # noqa: F401,F403 - training utilities and collate fns.
+from recipemind.config import *  # noqa: F401,F403 - re-exported constants are required.
+from recipemind.models import *  # noqa: F401,F403 - used by training/testing logic.
+from recipemind.pipeline import *  # noqa: F401,F403 - pipelines are reused during testing.
+from recipemind.pipeline.trainer import *  # noqa: F401,F403 - training utilities and collate fns.
 
 # Align thread usage with the original training script defaults.
 torch.set_num_threads(1)
@@ -91,9 +94,9 @@ def cmd_setup(args: argparse.Namespace) -> None:
 
     _info("Upgrading pip and installing dependencies")
     _run([str(python_exe), "-m", "pip", "install", "--upgrade", "pip"])
-    _run([str(python_exe), "-m", "pip", "install", "-r", "requirements.txt"])
+    _run([str(python_exe), "-m", "pip", "install", "-r", str(REPO_ROOT / "requirements.txt")])
 
-    for directory in (Path("data"), Path("figures"), Path("outputs")):
+    for directory in (REPO_ROOT / "data", REPO_ROOT / "figures", REPO_ROOT / "outputs"):
         directory.mkdir(parents=True, exist_ok=True)
     _info("Environment ready.")
 
@@ -104,17 +107,24 @@ def cmd_setup(args: argparse.Namespace) -> None:
 
 def cmd_figures(args: argparse.Namespace) -> None:
     mode = args.mode
-    Path("figures").mkdir(parents=True, exist_ok=True)
+    figures_dir = REPO_ROOT / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
     if mode == "default":
         _info("Generating default figures via Mypaperfiguretable.py")
-        _run([sys.executable, "Mypaperfiguretable.py"])
+        _run([sys.executable, str(LEGACY_DIR / "Mypaperfiguretable.py")])
     elif mode == "paper":
         _info("Generating full HerbMind publication figures")
-        _run([sys.executable, "HerbMindFiguresMatched.py", "--output-dir", "figures"])
+        _run([
+            sys.executable,
+            str(LEGACY_DIR / "HerbMindFiguresMatched.py"),
+            "--output-dir",
+            str(figures_dir),
+        ])
     elif mode == "pro":
         _info("Generating publication-quality figures (pro mode)")
-        Path("outputs").mkdir(parents=True, exist_ok=True)
-        _run([sys.executable, "Mypaperfiguretable_Pro.py"])
+        outputs_dir = REPO_ROOT / "outputs"
+        outputs_dir.mkdir(parents=True, exist_ok=True)
+        _run([sys.executable, str(LEGACY_DIR / "Mypaperfiguretable_Pro.py")])
     else:
         raise ValueError(f"Unsupported figure mode: {mode}")
     _info("Done. Figures saved under ./figures/.")

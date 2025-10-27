@@ -17,7 +17,7 @@ import torch.nn.parallel
 import torch.optim
 import torch.utils.data
 
-from env_config import *
+from recipemind.config import *
 
 
 def is_none_list(x):

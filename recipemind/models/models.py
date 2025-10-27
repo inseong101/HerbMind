@@ -1,10 +1,10 @@
-from env_config import *
+from recipemind.config import *
 import torch
 import torch.nn as nn
 import torch.nn.parallel
 import numpy as np
 import collections
-from model_utils import *
+from recipemind.models.model_utils import *
 import torch.optim as optim
 from sklearn.metrics import pairwise as pw
 import os.path
