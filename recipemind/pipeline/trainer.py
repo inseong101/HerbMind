@@ -1,7 +1,7 @@
-from data_utils import *
+from recipemind.data import *
 import numpy as np
 import pickle
-from env_config import *
+from recipemind.config import *
 import itertools
 from torch.utils.data import DataLoader
 import torch.nn as nn
@@ -9,8 +9,8 @@ import torch.optim as optim
 import torch.optim.lr_scheduler
 import time
 
-from models import *
-from model_utils import *
+from recipemind.models import *
+from recipemind.models.model_utils import *
 
 import wandb
 import os 
