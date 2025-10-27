@@ -1,33 +1,34 @@
-from recipemind.data import *
+from herbmind.data import *
 import numpy as np
 import pickle
-from recipemind.config import *
+from herbmind.config import *
 import itertools
 from torch.utils.data import DataLoader
+import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.optim.lr_scheduler
 import time
 
-from recipemind.models import *
-from recipemind.models.model_utils import *
+from herbmind.models import *
+from herbmind.models.model_utils import *
 
 import wandb
-import os 
+import os
 import argparse
 from tqdm import tqdm, trange
-# import plotter 
+# import plotter
 import seaborn as sb
 import matplotlib.pyplot as plt
 
 from sklearn.metrics import *
 from scipy.stats import pearsonr
 
-def load_recipe_trainer(args):
-    if 'recipemind' in args.model_struct or args.model_struct.startswith('baseline'):
-        return RecipeMindTrainer(args)
+def load_prescription_trainer(args):
+    if 'herbmind' in args.model_struct or args.model_struct.startswith('baseline'):
+        return HerbMindTrainer(args)
     elif args.model_struct == 'kitchenette':
-        return RecipeMindTrainer(args)
+        return HerbMindTrainer(args)
     else:
         raise
 
@@ -68,7 +69,7 @@ class Trainer(object):
         self.model_struct = args.model_struct
 
         self.mc_dropout = args.mc_dropout
-        # self.pretrained_recipebowl = args.pretrained_recipebowl
+        # self.pretrained_prescriptionbowl = args.pretrained_prescriptionbowl
 
         self.rm_args = args
 
@@ -79,9 +80,19 @@ class Trainer(object):
                 wandb_dict[f'{label}/{k}'] = v
         wandb.log(wandb_dict)
 
-class RecipeMindTrainer(Trainer):
+    def load_model(self, model_path):
+        device = getattr(self.rm_args, 'device', 'cpu')
+        model = load_prescription_model(self.rm_args)
+        state = torch.load(model_path, map_location=device)
+        if isinstance(state, dict) and 'state_dict' in state:
+            state = state['state_dict']
+        model.load_state_dict(state)
+        self.model = model.to(device)
+        return self.model
+
+class HerbMindTrainer(Trainer):
     def __init__(self, args=0):
-        super(RecipeMindTrainer, self).__init__(args)
+        super(HerbMindTrainer, self).__init__(args)
         self.lookup_table = dict({'set_words':    [], 'set_vectors': []})
         self.lookup_values = dict({'true_scores': [], 'pred_scores': [], 'pred_variances': [], 'true_norms': [], 'pred_norms': []})
         self.debug_mode = args.debug_mode
@@ -138,8 +149,8 @@ class RecipeMindTrainer(Trainer):
         return report
 
     def plot_scatter_scores(self):
-        # df2 = pd.read_csv(ROOT_PATH+'recipemind_subset_2_scores.csv')[['input singleton', 'input singleton count', 'npmi score']]
-        # df3 = pd.read_csv(ROOT_PATH+'recipemind_subset_3_scores.csv')[['input singleton', 'input singleton count', 'npmi score']]
+        # df2 = pd.read_csv(ROOT_PATH+'herbmind_subset_2_scores.csv')[['input singleton', 'input singleton count', 'npmi score']]
+        # df3 = pd.read_csv(ROOT_PATH+'herbmind_subset_3_scores.csv')[['input singleton', 'input singleton count', 'npmi score']]
         # dff = pd.concat([df2,df3],axis=0)
         # dff = dff.groupby('input singleton').agg(['mean', 'std'])
 

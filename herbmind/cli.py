@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Unified command line interface for RecipeMind utilities.
+"""Unified command line interface for HerbMind utilities.
 
 This script merges the functionality that used to live in multiple shell and
 Python entry points (``run.sh``, ``train.py`` and ``test.py``).  The interface is
@@ -26,10 +26,10 @@ import wandb
 import pickle
 import setproctitle
 
-from recipemind.config import *  # noqa: F401,F403 - re-exported constants are required.
-from recipemind.models import *  # noqa: F401,F403 - used by training/testing logic.
-from recipemind.pipeline import *  # noqa: F401,F403 - pipelines are reused during testing.
-from recipemind.pipeline.trainer import *  # noqa: F401,F403 - training utilities and collate fns.
+from herbmind.config import *  # noqa: F401,F403 - re-exported constants are required.
+from herbmind.models import *  # noqa: F401,F403 - used by training/testing logic.
+from herbmind.pipeline import *  # noqa: F401,F403 - pipelines are reused during testing.
+from herbmind.pipeline.trainer import *  # noqa: F401,F403 - training utilities and collate fns.
 
 # Align thread usage with the original training script defaults.
 torch.set_num_threads(1)
@@ -148,7 +148,7 @@ def get_vector_dimensions_train(args: argparse.Namespace) -> argparse.Namespace:
         "reciptor": 600,
         "bert-base-uncased": 768,
         "flavorgraph": 300,
-        "im2recipe": 300,
+        "im2prescription": 300,
         "binary": 630,
     }
 
@@ -163,8 +163,8 @@ def get_vector_dimensions_train(args: argparse.Namespace) -> argparse.Namespace:
 def baseline_arguments(args: argparse.Namespace) -> argparse.Namespace:
     if args.model_struct == "kitchenette":
         _info("Kitchenette Baseline Model")
-        args.dataset_name = "recipemind_doublets"
-        args.initial_vectors_J = "im2recipe"
+        args.dataset_name = "herbmind_doublets"
+        args.initial_vectors_J = "im2prescription"
         args.hidden_dim = 1024
         args.dropout_rate = 0.2
         args.learning_rate = 1e-4
@@ -202,9 +202,9 @@ def cmd_train(args: argparse.Namespace) -> None:
     wandb.define_metric("valid/*", step_metric="valid/step")
 
     _info("Loading model, trainer and collate function")
-    trainer = load_recipe_trainer(args)
+    trainer = load_prescription_trainer(args)
     collate = CollateFn(args)
-    model = load_recipe_model(args).cuda()
+    model = load_prescription_model(args).cuda()
     num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     _info(f"Trainable parameters for {args.model_struct}: {num_params}")
     wandb.watch(model, log="gradients", log_freq=1000)
@@ -235,10 +235,10 @@ def get_vector_dimensions_test(args: argparse.Namespace) -> argparse.Namespace:
         "reciptor": 768,
         "bert-base-uncased": 768,
         "flavorgraph": 300,
-        "im2recipe": 300,
+        "im2prescription": 300,
     }
 
-    if args.model_struct == "recipebowl":
+    if args.model_struct == "prescriptionbowl":
         lang_dim["J"] = 300
         lang_dim["T"] = 630
         lang_dim["R"] = 600
@@ -288,9 +288,9 @@ def cmd_test(args: argparse.Namespace) -> None:
     collate = CollateFn(args_cfg)
 
     _info("Loading model checkpoint and running the downstream pipeline")
-    dataset_suffix = f"recipemind_{downstream_task.split('_')[-1]}_{ideation_score}"
+    dataset_suffix = f"herbmind_{downstream_task.split('_')[-1]}_{ideation_score}"
     args_cfg.dataset_name = dataset_suffix
-    model = load_recipe_model(args_cfg).cuda()
+    model = load_prescription_model(args_cfg).cuda()
     checkpoint = torch.load(f"{OUT_PATH}{pn}_{sn}_{args.random_seed}/epoch_best.mdl")
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
@@ -331,7 +331,7 @@ def cmd_test(args: argparse.Namespace) -> None:
 # ---------------------------------------------------------------------------
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="RecipeMind consolidated CLI")
+    parser = argparse.ArgumentParser(description="HerbMind consolidated CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # setup
@@ -351,7 +351,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser_figures.set_defaults(func=cmd_figures)
 
     # train
-    parser_train = subparsers.add_parser("train", help="Train RecipeMind models")
+    parser_train = subparsers.add_parser("train", help="Train HerbMind models")
     parser_train.add_argument("--project_name", "-pn", default="Test SonyAI", type=str)
     parser_train.add_argument("--session_name", "-sn", default="Test SonyAI", type=str)
     parser_train.add_argument("--random_seed", default=911012, type=int)
@@ -359,11 +359,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser_train.add_argument("--debug_mode", "-dm", default=False, action="store_true")
     parser_train.add_argument("--dataset_index", default="ver1", type=str)
     parser_train.add_argument("--dataset_version", default="211210", type=str)
-    parser_train.add_argument("--dataset_name", default="recipemind_mixed_sPMId02", type=str)
+    parser_train.add_argument("--dataset_name", default="herbmind_mixed_sPMId02", type=str)
     parser_train.add_argument("--initial_vectors_J", default="flavorgraph", type=str)
     parser_train.add_argument("--initial_vectors_T", default="bert-base-uncased", type=str)
     parser_train.add_argument("--initial_vectors_R", default="bert-base-uncased", type=str)
-    parser_train.add_argument("--model_struct", default="recipemind", type=str)
+    parser_train.add_argument("--model_struct", default="herbmind", type=str)
     parser_train.add_argument("--model_analysis", default=False, action="store_true")
     parser_train.add_argument("--hidden_dim", default=128, type=int)
     parser_train.add_argument("--dropout_rate", default=0.025, type=float)
@@ -396,11 +396,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser_test.add_argument("--random_seed", default=911012, type=int)
     parser_test.add_argument("--dataset_index", default=5, type=int)
     parser_test.add_argument("--dataset_version", default="211210", type=str)
-    parser_test.add_argument("--dataset_name", default="recipemind", type=str)
+    parser_test.add_argument("--dataset_name", default="herbmind", type=str)
     parser_test.add_argument("--initial_vectors_J", default="flavorgraph", type=str)
     parser_test.add_argument("--initial_vectors_T", default="nothing", type=str)
     parser_test.add_argument("--initial_vectors_R", default="nothing", type=str)
-    parser_test.add_argument("--model_struct", default="recipemind", type=str)
+    parser_test.add_argument("--model_struct", default="herbmind", type=str)
     parser_test.add_argument("--model_analysis", default=False, action="store_true")
     parser_test.add_argument("--hidden_dim", default=1024, type=int)
     parser_test.add_argument("--dropout_rate", default=0.0, type=float)

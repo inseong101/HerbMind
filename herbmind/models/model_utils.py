@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import itertools
 import numpy as np
 from random import sample as random_sample
-from recipemind.config import *
+from herbmind.config import *
 
 '''
     ##############################

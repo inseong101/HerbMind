@@ -1,204 +1,37 @@
-# RecipeMind: Guiding Ingredient Choices from Food Pairing to Recipe Completion using Cascaded Set Transformer
-* [paper - CIKM 2022 Proceedings](https://dl.acm.org/doi/abs/10.1145/3511808.3557092)
-* [demo - http://recipemind.korea.ac.kr](http://recipemind.korea.ac.kr)
+# HerbMind (한의학 처방 보조 AI)
 
-## Abstract
+본 레포지토리는 한의학 처방 구성을 보조하기 위한 AI 모델 `HerbMind`의 코드입니다.
+기존 한의학 교과서 처방 데이터를 기반으로, 특정 약재 조합에 추가할 다음 약재를 추천합니다.
 
-We propose a computational approach for recipe ideation, a down-stream task that helps users select and gather ingredients for creating dishes. To perform this task, we developed RecipeMind, a food affinity score prediction model that quantifies the suitability of adding an ingredient to set of other ingredients. We constructed a large-scale dataset containing ingredient co-occurrence based scores to train and evaluate RecipeMind on food affinity score prediction. Deployed in recipe ideation, RecipeMind helps the user expand an initial set of ingredients by suggesting additional ingredients. Experiments and qualitative analysis show RecipeMind’s potential in fulfilling its assistive role in cuisine domain.
+## 프로젝트 목표
+AI를 잘 모르는 한의학 연구자도 쉽게 이해할 수 있도록, AI의 추천 과정과 판단 근거(어텐션)를 시각화하는 것을 목표로 합니다.
 
-## Overview of Recipe Ideation
+## 실행 방법
 
-![img](./figures/0_task.png)
+1.  **데이터 준비**: `data/` 폴더에 5개의 한의학 교과서 처방 CSV 파일을 위치시킵니다.
+    * `한국한의학연구원_한의대 간계내과학 교과서 처방 데이터_20241126.csv`
+    * `한국한의학연구원_한의대 비계내과학 교과서 처방 데이터_20241126.csv`
+    * (...
+    * * )
 
-## Overview of RecipeMind
+2.  **사례 연구 설정**: `cases.yaml` 파일에 분석을 시작할 약재 조합(seeds)을 정의합니다. (예: `[숙지황, 山茱萸]`)
 
-![img](./figures/1_model.png)
+3.  **전체 실행**:
+    ```bash
+    bash run.sh
+    ```
 
-## Repository layout
+## 실행 결과
+`run.sh` 스크립트는 다음 3단계를 순차적으로 실행합니다:
 
-```
-recipemind/
-├── __init__.py
-├── cli.py
-├── config.py
-├── data.py
-├── models/
-│   ├── __init__.py
-│   ├── model_utils.py
-│   └── models.py
-└── pipeline/
-    ├── __init__.py
-    ├── pipeline.py
-    └── trainer.py
-legacy/
-├── HerbMindFiguresMatched.py
-├── Mypaperfiguretable.py
-├── Mypaperfiguretable_Pro.py
-├── RecipeMind Post Analysis.ipynb
-├── RecipeMindMatched.py
-└── StepwiseCases.py
-```
+1.  `python3 train.py`: `data/` 폴더의 CSV를 읽어 AI 모델(`model_best.pth`)을 훈련합니다.
+2.  `python3 test.py`: 훈련된 모델의 성능을 평가합니다.
+3.  `python3 pipeline.py`: `cases.yaml`의 약재 조합을 기반으로 단계별 처방 빌드업을 수행하고, 분석 결과를 `plots/` 폴더에 저장합니다.
 
-Core training and inference code now lives under the `recipemind/` Python package. Historical notebooks and figure-generation scripts remain available under `legacy/`.
+## 생성되는 주요 파일 (in `plots/` folder)
 
-## Prerequisites for running RecipeMind
+* **`[사례A]_table.csv`**: `[숙지황, 山茱萸]`에서 시작하여 8단계 동안 AI가 추천한 Top 3 약재 및 궁합 점수 목록표. (독자 이해를 위한 핵심 Table)
+* **`[사례A]_stepN_cross_attn.png`**: (N단계) AI가 새 약재(예: `택사`)를 추가할 때, 기존 묶음(`[숙지황, 山茱萸, 산약]`)의 누구에게 주목했는지 보여주는 **바 차트**.
+* **`[사례A]_stepN_self_attn.png`**: (N단계) AI가 기존 묶음(`[숙지황, 山茱萸, 산약]`)이 **서로** 얼마나 강하게 상호작용하는지 분석한 **히트맵**.
 
-- Python 3.8.12
-- CUDA: 11.X
-- Download and extract data.tar.gz ([link](https://drive.google.com/file/d/1xZa4fPQvoxWBX_fvcFtmZjWZj0Fa7pFj/view?usp=sharing), 388.4MB) at directory **./data**. These files are the datasets containing ingredient n-tuplets with food affinity scores and ingredient word embeddings.
-- Download and extract saved.tar.gz ([link](https://drive.google.com/file/d/1D_PQcf82-0b4qW3EUGQWV_cQnKezt2Yc/view?usp=sharing), 115.3MB) at directory **./saved**. These files are the model checkpoints for each random seed (1001 ~ 1005).
-
-## Installing the Python (3.8.12) Conda Environment
-
-```
-conda env create -f recipemind.yml
-conda activate recipemind
-```
-
-## Training RecipeMind
-
-Run the consolidated command line interface:
-```
-python -m recipemind.cli train --session_name {your_session_name} --random_seed {random_seed_integer}
-```
-
-## Testing RecipeMind in all ingredient set sizes from 2 to 7
-
-Run the unified CLI for each downstream subset (2-7):
-```
-python -m recipemind.cli test --session_name {your_session_name} --random_seed {random_seed_integer} --downstream_task scoring_subset{N}
-```
-
-## Analyzing RecipeMind
-
-The Jupyter notebook **legacy/RecipeMind Post Analysis.ipynb** contains the source code for deploying the trained RecipeModel model in recipe ideation scenarios starting with any number of ingredients. We provided example cells that output the ideation results and attention heatmaps for interpretation purposes. The example heatmaps are the following,
-
-### Case Study 1: Starting with Carrots and Onions
-
-![img](./figures/2_attnmaps1.png)
-
-### Case Study 2: Starting with Buttermilk and Flour
-
-![img](./figures/3_attnmaps2.png)
-
-
-## Contributors
-
-<table>
-	<tr>
-		<th>Name</th>		
-		<th>Affiliation</th>
-		<th>Email</th>
-	</tr>
-	<tr>
-		<td>Mogan Gim&dagger;</td>		
-		<td>Data Mining and Information Systems Lab,<br>Korea University, Seoul, South Korea</td>
-		<td>akim@korea.ac.kr</td>
-	</tr>
-	<tr>
-		<td>Donghee Choi&dagger;</td>		
-		<td>Data Mining and Information Systems Lab,<br>Korea University, Seoul, South Korea</td>
-		<td>choidonghee@korea.ac.kr</td>
-	</tr>
-	<tr>
-		<td>Kana Maruyama</td>		
-		<td>Sony AI, Tokyo, Japan</td>
-		<td>Kana.Maruyama@sony.com</td>
-	</tr>
-	<tr>
-		<td>Jihun Choi</td>		
-		<td>Sony AI, Tokyo, Japan</td>
-		<td>Jihun.A.Choi@sony.com</td>
-	</tr>
-	<tr>
-		<td>Donghyeon Park*</td>		
-		<td>Food & Nutrition AI Lab,<br>Sejong University, Seoul, South Korea</td>
-		<td>parkdh@sejong.ac.kr</td>
-	</tr>
-	<tr>
-		<td>Jaewoo Kang*</td>		
-		<td>Data Mining and Information Systems Lab,<br>Korea University, Seoul, South Korea</td>
-		<td>kangj@korea.ac.kr</td>
-	</tr>
-
-</table>
-
-
-
-- &dagger;: *Equal Contributors*
-- &ast;: *Corresponding Authors*
-
-## Citation
-```bibtex
-@inproceedings{gim2022recipemind,
-  title={RecipeMind: Guiding Ingredient Choices from Food Pairing to Recipe Completion using Cascaded Set Transformer},
-  author={Gim, Mogan and Choi, Donghee and Maruyama, Kana and Choi, Jihun and Kim, Hajung and Park, Donghyeon and Kang, Jaewoo},
-  booktitle={Proceedings of the 31st ACM International Conference on Information \& Knowledge Management},
-  pages={3092--3102},
-  year={2022}
-}
-```
-
-
-Generating Paper Figures & Console Tables
-
-This repo includes a standalone script to generate HerbMind manuscript figures and print tables.
-
-Run
-
-pip install -r requirements.txt
-python -m recipemind.cli figures --mode default
-
-
-Tables (dataset stats, ablations) are printed to console (no CSV export).
-
-Figures are saved as PNG under figures/:
-
-fig1_model_architecture.png
-
-fig2_spmir_distribution.png
-
-fig3_accuracy_comparison.png
-
-fig4_attention_heatmap.png
-
-fig5_qualitative_examples.png
-
-
-## Quick Start (HerbMind figures & tables)
-
-Put your KIOM CSVs under ./data/
-
-Expected columns (auto-detected): 처방아이디 (prescription id), 약재명 or 약재한글명 (herb name).
-
-Run (one command):
-
-```bash
-python -m recipemind.cli setup
-python -m recipemind.cli figures --mode default  # use --mode paper or --mode pro for other figure suites
-```
-
-A local virtualenv (.venv) will be created and dependencies installed (compatible with macOS Homebrew Python) when running the
-``setup`` sub-command.
-
-Tables print to console (no CSV export).
-
-Figures are saved under ./figures/:
-
-- fig1_model_architecture.png
-- fig2_spmir_distribution.png
-- fig3_accuracy_comparison.png
-- fig4_attention_heatmap.png
-- fig5_qualitative_examples.png
-
-If you're on Apple Silicon with Homebrew Python (PEP 668), the script handles a local venv automatically.
-
-## Publication-quality figures (600 dpi)
-
-```bash
-python -m recipemind.cli figures --mode pro
-```
-
-Uses `legacy/Mypaperfiguretable_Pro.py` (Helvetica/Arial fonts, unified palette).
-
-Reads optional `outputs/metrics.json` for real results; otherwise uses placeholders.
+*이 코드는 [CIKM 2022에 게재된 RecipeMind 논문](https://doi.org/10.1145/3511808.3557092)의 아키텍처를 기반으로 한의학 도메인에 맞게 수정되었습니다.*
